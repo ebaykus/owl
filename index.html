@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0A0A0A">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Owl">
+  <title>Owl</title>
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icons/icon-192.png" type="image/png">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <header class="topbar">
+    <img src="icons/logo.png" alt="" class="topbar-logo">
+    <h1 id="page-title">Antrenman</h1>
+  </header>
+
+  <main id="view"></main>
+
+  <nav class="tabbar">
+    <a href="#/antrenman" data-tab="antrenman">
+      <svg viewBox="0 0 24 24"><path d="M2 12h1M6 8H4a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h2M6 7v10a1 1 0 0 0 1 1h1a1 1 0 0 0 1-1V7a1 1 0 0 0-1-1H7a1 1 0 0 0-1 1zM9 12h6M15 7v10a1 1 0 0 0 1 1h1a1 1 0 0 0 1-1V7a1 1 0 0 0-1-1h-1a1 1 0 0 0-1 1zM18 8h2a1 1 0 0 1 1 1v6a1 1 0 0 1-1 1h-2M22 12h-1"/></svg>
+      <span>Antrenman</span>
+    </a>
+    <a href="#/gecmis" data-tab="gecmis">
+      <svg viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="16" rx="2"/><path d="M16 3v4M8 3v4M4 11h16"/></svg>
+      <span>Geçmiş</span>
+    </a>
+    <a href="#/ilerleme" data-tab="ilerleme">
+      <svg viewBox="0 0 24 24"><path d="M4 19h16M4 15l4-6 4 2 4-5 4 4"/></svg>
+      <span>İlerleme</span>
+    </a>
+    <a href="#/ayarlar" data-tab="ayarlar">
+      <svg viewBox="0 0 24 24"><circle cx="14" cy="6" r="2"/><circle cx="8" cy="12" r="2"/><circle cx="17" cy="18" r="2"/><path d="M4 6h8M16 6h4M4 12h2M10 12h10M4 18h11M19 18h1"/></svg>
+      <span>Ayarlar</span>
+    </a>
+  </nav>
+
+  <div id="toast" class="toast" role="status"></div>
+
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>

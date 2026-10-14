@@ -1,0 +1,11 @@
+{
+  "name": "owl-gym",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "icons": "node scripts/make-icons.mjs"
+  },
+  "devDependencies": {
+    "sharp": "^0.33.5"
+  }
+}
