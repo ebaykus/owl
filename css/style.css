@@ -378,6 +378,72 @@ a.list-item { text-decoration: none; }
 .rec-row.warm { color: var(--muted); }
 .rec-best { margin: 4px 0 0; font-size: 13px; color: var(--purple); }
 
+/* İlerleme */
+.ex-select {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  min-height: 50px;
+  padding: 0 16px;
+  background: var(--surface);
+  border: 0.5px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--text);
+  font: inherit;
+  font-size: 18px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.ex-select .chev { width: 22px; height: 22px; fill: none; stroke: var(--red-hi); stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+.ex-select + .stats { margin-top: 12px; }
+.stat-value.pr { color: var(--purple); }
+
+.seg {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 2px;
+  padding: 3px;
+  margin-bottom: 10px;
+  background: var(--surface);
+  border-radius: 12px;
+}
+.seg button {
+  min-height: 36px;
+  border: 0;
+  border-radius: 9px;
+  background: none;
+  color: var(--muted);
+  font: inherit;
+  font-size: 14px;
+  cursor: pointer;
+}
+.seg button.active { background: var(--surface-2); color: var(--text); font-weight: 600; }
+
+.chart-card { padding: 12px 12px 6px; margin-bottom: 4px; }
+.readout { margin: 0 4px 6px; min-height: 20px; font-size: 14px; color: var(--text-2); font-variant-numeric: tabular-nums; }
+.readout b { color: var(--text); }
+.readout-sets { display: block; font-size: 12px; color: var(--muted); }
+.chart-box { width: 100%; }
+.chart { display: block; touch-action: pan-y; -webkit-user-select: none; user-select: none; }
+.chart text { font-family: inherit; font-variant-numeric: tabular-nums; }
+.chart-note { margin: 0 4px 6px; font-size: 12px; color: var(--muted); }
+
+.li-stack { display: flex; flex-direction: column; padding: 8px 0; min-width: 0; }
+.li-stack .li-title { font-weight: 500; color: var(--text-2); }
+.prog-val { color: var(--text); font-variant-numeric: tabular-nums; white-space: nowrap; display: flex; align-items: center; gap: 6px; }
+.pr-badge {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--purple);
+  border: 1px solid var(--purple);
+  border-radius: 6px;
+  padding: 0 5px;
+  line-height: 16px;
+}
+.list-item.current { background: var(--surface-2); }
+.pick-row { display: flex; justify-content: space-between; align-items: center; }
+
 /* Alttan açılan panel */
 body.sheet-open { overflow: hidden; }
 .sheet-overlay {
