@@ -1,25 +1,29 @@
 // Antrenman sekmesi: antrenman başlatma, set girişi ve kaydetme.
 // Devam eden antrenman her değişiklikte kaydedilir; uygulama kapansa da kaybolmaz.
 import * as db from '../db.js';
-import { toast, sheet, actionSheet, esc, fmt, parseNum, uid, formatDuration } from '../ui.js';
+import { pickExercise } from '../picker.js';
+import { toast, actionSheet, esc, fmt, parseNum, uid, formatDuration } from '../ui.js';
 
-const GROUPS = ['Göğüs', 'Sırt', 'Bacak', 'Omuz', 'Kol', 'Karın', 'Diğer'];
 const CHECK_ICON = '<svg viewBox="0 0 24 24"><path d="M5 12l5 5L20 7"/></svg>';
 
-let state = null;   // { el, workout, exercises: Map, previous: Map }
+// { el, workout, exercises: Map, templates: [], lastTemplateId, previous: Map }
+let state = null;
 let saveTimer = null;
 
 export const antrenman = {
   title: 'Antrenman',
   async mount(el) {
-    const [workouts, exercises] = await Promise.all([db.getAll('workouts'), db.getAll('exercises')]);
+    const [workouts, exercises, templates] = await Promise.all([db.getAll('workouts'), db.getAll('exercises'), db.getAll('templates')]);
     if (el.dataset.view !== 'antrenman') return; // bu arada başka sekmeye geçildiyse
 
+    const finished = workouts.filter(w => w.finishedAt).sort((a, b) => b.startedAt - a.startedAt);
     state = {
       el,
       workout: workouts.find(w => !w.finishedAt) ?? null,
       exercises: new Map(exercises.map(e => [e.id, e])),
-      previous: previousSets(workouts),
+      templates: templates.sort((a, b) => a.order - b.order),
+      lastTemplateId: finished.find(w => w.templateId)?.templateId ?? null,
+      previous: previousSets(finished),
     };
     render();
 
@@ -39,26 +43,42 @@ export const antrenman = {
   },
 };
 
-// Her egzersiz için en son bitirilen antrenmandaki setler ("geçen sefer")
-function previousSets(workouts) {
+// Her egzersiz için en son antrenmandaki setler ("geçen sefer"). finished: yeniden eskiye sıralı.
+function previousSets(finished) {
   const map = new Map();
-  workouts
-    .filter(w => w.finishedAt)
-    .sort((a, b) => b.startedAt - a.startedAt)
-    .forEach(w => w.entries.forEach(e => { if (!map.has(e.exerciseId)) map.set(e.exerciseId, e.sets); }));
+  finished.forEach(w => w.entries.forEach(e => { if (!map.has(e.exerciseId)) map.set(e.exerciseId, e.sets); }));
   return map;
 }
 
-// Boş bir set için önerilen değer: geçen seferki aynı set, yoksa bu egzersizdeki bir önceki set
-function suggestion(entry, j) {
-  const prev = state.previous.get(entry.exerciseId);
-  if (prev?.[j]) return prev[j];
-  if (j === 0) return { weight: null, reps: null };
-  const before = entry.sets[j - 1], ph = suggestion(entry, j - 1);
-  return { weight: before.weight ?? ph.weight, reps: before.reps ?? ph.reps };
+// Program sırayla döner: en son yapılan şablondan sonraki
+function nextTemplate() {
+  const list = state.templates;
+  if (!list.length) return null;
+  const i = list.findIndex(t => t.id === state.lastTemplateId);
+  return list[(i + 1) % list.length];
 }
 
-const newSet = () => ({ weight: null, reps: null, done: false });
+// Boş bir set için önerilen değer (gri yazı). Sırasıyla:
+// geçen seferki aynı set → bu egzersizdeki bir önceki set → şablondaki hedef tekrar.
+// Isınma setleri sadece ısınma setleriyle, çalışma setleri çalışma setleriyle eşleşir.
+function suggestion(entry, j) {
+  const set = entry.sets[j];
+  const sameKind = s => !!s.warmup === !!set.warmup;
+  const k = entry.sets.slice(0, j).filter(sameKind).length;
+  const prev = state.previous.get(entry.exerciseId)?.filter(sameKind);
+  if (prev?.[k]) return prev[k];
+
+  const before = entry.sets.slice(0, j).findLastIndex(sameKind);
+  if (before >= 0) {
+    const b = entry.sets[before], ph = suggestion(entry, before);
+    return { weight: b.weight ?? ph.weight, reps: b.reps ?? ph.reps };
+  }
+  const targetReps = set.warmup ? NaN : parseInt(entry.target?.reps, 10);
+  return { weight: null, reps: Number.isFinite(targetReps) ? targetReps : null };
+}
+
+const newSet = (warmup = false) => (warmup ? { weight: null, reps: null, done: false, warmup: true } : { weight: null, reps: null, done: false });
+const workSets = sets => sets.filter(s => !s.warmup);
 
 /* ---------- Kaydetme ---------- */
 
@@ -83,21 +103,29 @@ function render() {
 }
 
 function startHtml() {
+  const next = nextTemplate();
+  const names = t => t.exercises.map(e => esc(state.exercises.get(e.exerciseId)?.name ?? '?')).join(' · ');
   return `
-    <div class="hero">
+    <div class="hero${next ? ' hero-sm' : ''}">
       <img src="icons/logo.png" alt="">
       <h2>Bugün ne çalışıyoruz?</h2>
-      <p>Boş başla ya da bir şablon seç.</p>
     </div>
+    ${next ? `
+      <section class="card next-card">
+        <p class="next-label">Sıradaki</p>
+        <h3>${esc(next.name)}</h3>
+        <p class="next-list">${names(next)}</p>
+        <button class="btn btn-primary" data-act="start-template" data-id="${esc(next.id)}">${esc(next.name)} başlat</button>
+      </section>` : ''}
     <div class="stack">
-      <button class="btn btn-primary" data-act="start">Boş antrenman başlat</button>
-      <button class="btn" data-act="start-template">Şablondan başlat</button>
+      ${state.templates.length > 1 ? '<button class="btn" data-act="pick-template">Başka şablon seç</button>' : ''}
+      <button class="btn ${next ? 'btn-ghost' : 'btn-primary'}" data-act="start">Boş antrenman başlat</button>
     </div>`;
 }
 
 function activeHtml() {
   const w = state.workout;
-  const doneSets = w.entries.reduce((n, e) => n + e.sets.filter(s => s.done).length, 0);
+  const doneSets = w.entries.reduce((n, e) => n + workSets(e.sets).filter(s => s.done).length, 0);
   const date = new Date(w.startedAt).toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', weekday: 'long' });
   return `
     <div class="workout-head">
@@ -114,16 +142,23 @@ function activeHtml() {
     </div>`;
 }
 
+function targetText(t) {
+  if (!t) return '';
+  const work = t.reps ? `${t.sets}×${esc(t.reps)}` : `${t.sets} set`;
+  return t.warmup ? `${t.warmup} ısınma + ${work}` : work;
+}
+
 function entryHtml(entry, i) {
   const ex = state.exercises.get(entry.exerciseId);
-  const prev = state.previous.get(entry.exerciseId);
+  const prev = workSets(state.previous.get(entry.exerciseId) ?? []);
   return `
     <section class="card ex-card" data-entry="${i}">
       <div class="ex-head">
         <h3>${esc(ex?.name ?? 'Silinmiş egzersiz')}</h3>
         <button class="icon-btn" data-act="exercise-menu" aria-label="Egzersiz seçenekleri">•••</button>
       </div>
-      ${prev ? `<p class="prev">Geçen sefer: ${prev.map(s => `${fmt(s.weight)}×${s.reps}`).join(' · ')}</p>` : ''}
+      ${entry.target ? `<p class="target">Hedef: ${targetText(entry.target)}</p>` : ''}
+      ${prev.length ? `<p class="prev">Geçen sefer: ${prev.map(s => `${fmt(s.weight)}×${s.reps}`).join(' · ')}</p>` : ''}
       <div class="set-grid set-head"><span>Set</span><span>kg</span><span>Tekrar</span><span></span></div>
       ${entry.sets.map((s, j) => setHtml(entry, s, j)).join('')}
       <button class="add-set" data-act="add-set">+ Set ekle</button>
@@ -132,12 +167,14 @@ function entryHtml(entry, i) {
 
 function setHtml(entry, s, j) {
   const ph = suggestion(entry, j);
+  const label = s.warmup ? 'Is' : workSets(entry.sets.slice(0, j + 1)).length;
+  const name = s.warmup ? 'Isınma seti' : `Set ${label}`;
   return `
-    <div class="set-grid set-row${s.done ? ' done' : ''}" data-set="${j}">
-      <span class="set-no">${j + 1}</span>
-      <input data-field="weight" inputmode="decimal" autocomplete="off" value="${fmt(s.weight)}" placeholder="${fmt(ph.weight)}" aria-label="Set ${j + 1} kilo">
-      <input data-field="reps" inputmode="numeric" pattern="[0-9]*" autocomplete="off" value="${s.reps ?? ''}" placeholder="${ph.reps ?? ''}" aria-label="Set ${j + 1} tekrar">
-      <button class="check" data-act="toggle-set" aria-label="Seti tamamla">${CHECK_ICON}</button>
+    <div class="set-grid set-row${s.warmup ? ' warm' : ''}${s.done ? ' done' : ''}" data-set="${j}">
+      <span class="set-no">${label}</span>
+      <input data-field="weight" inputmode="decimal" autocomplete="off" value="${fmt(s.weight)}" placeholder="${fmt(ph.weight)}" aria-label="${name} kilo">
+      <input data-field="reps" inputmode="numeric" pattern="[0-9]*" autocomplete="off" value="${s.reps ?? ''}" placeholder="${ph.reps ?? ''}" aria-label="${name} tekrar">
+      <button class="check" data-act="toggle-set" aria-label="${name} tamamla">${CHECK_ICON}</button>
     </div>`;
 }
 
@@ -154,8 +191,9 @@ function onClick(e) {
   const i = Number(btn.closest('[data-entry]')?.dataset.entry);
   switch (btn.dataset.act) {
     case 'start': return startWorkout();
-    case 'start-template': return toast('Şablonlar bir sonraki adımda geliyor');
-    case 'add-exercise': return pickExercise(addEntry);
+    case 'start-template': return startWorkout(state.templates.find(t => t.id === btn.dataset.id));
+    case 'pick-template': return actionSheet(state.templates.map(t => ({ label: t.name, onClick: () => startWorkout(t) })), 'Şablon seç');
+    case 'add-exercise': return pickExercise(state.exercises, addEntry);
     case 'add-set': return addSet(i);
     case 'toggle-set': return toggleSet(i, Number(btn.closest('[data-set]').dataset.set));
     case 'exercise-menu': return exerciseMenu(i);
@@ -180,11 +218,23 @@ function onFocus(e) {
 
 /* ---------- İşlemler ---------- */
 
-async function startWorkout() {
-  state.workout = { id: uid(), name: 'Antrenman', startedAt: Date.now(), finishedAt: null, entries: [] };
+// template verilirse onun egzersizleri ve set sayılarıyla başlar
+async function startWorkout(template) {
+  state.workout = {
+    id: uid(),
+    name: template?.name ?? 'Antrenman',
+    templateId: template?.id ?? null,
+    startedAt: Date.now(),
+    finishedAt: null,
+    entries: (template?.exercises ?? []).map(t => ({
+      exerciseId: t.exerciseId,
+      target: { warmup: t.warmup, sets: t.sets, reps: t.reps },
+      sets: [...Array(t.warmup || 0)].map(() => newSet(true)).concat([...Array(t.sets || 1)].map(() => newSet())),
+    })),
+  };
   await saveNow();
   render();
-  pickExercise(addEntry);
+  if (!template) pickExercise(state.exercises, addEntry);
 }
 
 function addEntry(exerciseId) {
@@ -224,7 +274,9 @@ function toggleSet(i, j) {
 
 function exerciseMenu(i) {
   const entry = state.workout.entries[i];
+  const warmups = entry.sets.filter(s => s.warmup).length;
   actionSheet([
+    { label: 'Isınma seti ekle', onClick: () => { entry.sets.splice(warmups, 0, newSet(true)); saveNow(); render(); } },
     entry.sets.length > 1 && { label: 'Son seti sil', onClick: () => { entry.sets.pop(); saveNow(); render(); } },
     { label: 'Egzersizi kaldır', danger: true, onClick: () => { state.workout.entries.splice(i, 1); saveNow(); render(); } },
   ].filter(Boolean), state.exercises.get(entry.exerciseId)?.name);
@@ -243,7 +295,7 @@ function finishMenu() {
 async function finishWorkout() {
   const w = state.workout;
   const entries = w.entries
-    .map(e => ({ exerciseId: e.exerciseId, sets: e.sets.filter(s => s.done) }))
+    .map(e => ({ ...e, sets: e.sets.filter(s => s.done) }))
     .filter(e => e.sets.length);
   if (!entries.length) return toast('Kaydetmek için en az bir seti tamamla');
 
@@ -252,7 +304,8 @@ async function finishWorkout() {
   if (!state) return;
 
   entries.forEach(e => state.previous.set(e.exerciseId, e.sets));
-  const sets = entries.flatMap(e => e.sets);
+  if (w.templateId) state.lastTemplateId = w.templateId;
+  const sets = entries.flatMap(e => workSets(e.sets));
   const volume = sets.reduce((sum, s) => sum + s.weight * s.reps, 0);
   state.workout = null;
   render();
@@ -267,54 +320,4 @@ async function discardWorkout() {
   state.workout = null;
   render();
   toast('Antrenman silindi');
-}
-
-/* ---------- Egzersiz seçici ---------- */
-
-function pickExercise(onPick) {
-  sheet(`
-    <div class="sheet-head">
-      <h2>Egzersiz ekle</h2>
-      <button class="link-btn" data-close>Kapat</button>
-    </div>
-    <input class="search" type="search" placeholder="Egzersiz ara" autocomplete="off" enterkeyhint="search">
-    <div class="picker-list"></div>`, {
-    tall: true,
-    onMount(panel, close) {
-      const list = panel.querySelector('.picker-list');
-      const search = panel.querySelector('.search');
-
-      const draw = () => {
-        const q = search.value.trim();
-        const key = q.toLocaleLowerCase('tr');
-        const all = [...state.exercises.values()];
-        const matches = all.filter(e => e.name.toLocaleLowerCase('tr').includes(key));
-        const exact = all.some(e => e.name.toLocaleLowerCase('tr') === key);
-
-        let html = q && !exact ? `<button class="pick-item pick-new" data-new>+ “${esc(q)}” egzersizini ekle</button>` : '';
-        for (const g of GROUPS) {
-          const items = matches.filter(e => (e.group ?? 'Diğer') === g).sort((a, b) => a.name.localeCompare(b.name, 'tr'));
-          if (!items.length) continue;
-          html += `<p class="pick-group">${g}</p>` + items.map(e => `<button class="pick-item" data-id="${esc(e.id)}">${esc(e.name)}</button>`).join('');
-        }
-        list.innerHTML = html;
-      };
-
-      search.addEventListener('input', draw);
-      list.addEventListener('click', async e => {
-        const item = e.target.closest('.pick-item');
-        if (!item) return;
-        let id = item.dataset.id;
-        if (item.hasAttribute('data-new')) {
-          const ex = { id: uid(), name: search.value.trim(), group: 'Diğer', custom: true };
-          await db.put('exercises', ex);
-          state.exercises.set(ex.id, ex);
-          id = ex.id;
-        }
-        close();
-        onPick(id);
-      });
-      draw();
-    },
-  });
 }

@@ -1,12 +1,16 @@
-// Sekme ekranları. Her ekranın bir başlığı ve ekranı çizen mount(el) fonksiyonu var.
-// mount bir temizlik fonksiyonu döndürebilir; sekmeden çıkarken çağrılır.
+// Sekme ekranları. Her ekranın bir başlığı ve ekranı çizen mount(el, param) fonksiyonu var.
+// mount bir temizlik fonksiyonu döndürebilir; ekrandan çıkarken çağrılır.
+// tab: alt menüde hangi sekmenin yanacağı (alt sayfalar için).
 import { toast } from './ui.js';
 import { antrenman } from './views/antrenman.js';
+import { sablonlar, sablon } from './views/sablonlar.js';
 
 const soon = () => toast('Bir sonraki adımlarda geliyor');
 
 export const views = {
   antrenman,
+  sablonlar,
+  sablon,
 
   gecmis: {
     title: 'Geçmiş',
@@ -38,7 +42,7 @@ export const views = {
       el.innerHTML = `
         <p class="section-label">Antrenman</p>
         <div class="list">
-          <button class="list-item" data-action="templates">Şablonlar <span class="chev">›</span></button>
+          <a class="list-item" href="#/sablonlar">Şablonlar <span class="chev">›</span></a>
           <button class="list-item" data-action="exercises">Egzersizler <span class="chev">›</span></button>
         </div>
         <p class="section-label">Veri</p>
@@ -46,7 +50,7 @@ export const views = {
           <button class="list-item" data-action="export">Yedeği dışa aktar <span class="chev">›</span></button>
           <button class="list-item" data-action="import">Yedeği içe aktar <span class="chev">›</span></button>
         </div>
-        <p class="version">Owl · sürüm 0.2</p>`;
+        <p class="version">Owl · sürüm 0.3</p>`;
       el.querySelectorAll('[data-action]').forEach(b => b.addEventListener('click', soon));
     },
   },

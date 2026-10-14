@@ -158,6 +158,72 @@ main {
 
 .hint { text-align: center; color: var(--muted); padding: 28px 0; margin: 0; }
 
+.hero-sm { padding: 4px 0 18px; }
+.hero-sm img { width: 110px; height: 110px; }
+.hero-sm h2 { margin-top: 6px; font-size: 20px; }
+
+.btn-ghost { border-color: transparent; color: var(--muted); font-weight: 500; }
+.btn-danger { border-color: #4a1416; color: #E5484D; }
+
+/* Sıradaki antrenman kartı */
+.next-card { margin-bottom: 12px; padding: 16px; }
+.next-label { margin: 0; font-size: 12px; text-transform: uppercase; letter-spacing: .08em; color: var(--red-hi); font-weight: 600; }
+.next-card h3 { font-size: 24px; margin: 2px 0 6px; }
+.next-list { margin: 0 0 14px; font-size: 13px; color: var(--muted); line-height: 1.5; }
+
+/* Alt sayfalar */
+.back {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  margin: -12px 0 4px -2px;
+  color: var(--red-hi);
+  font-weight: 600;
+  text-decoration: none;
+}
+.field-label { display: block; font-size: 13px; color: var(--muted); margin: 0 4px 6px; }
+.text-input {
+  width: 100%;
+  height: 48px;
+  border: 0;
+  border-radius: 12px;
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+  font-size: 17px;
+  font-weight: 600;
+  padding: 0 14px;
+  outline: none;
+  -webkit-appearance: none;
+  appearance: none;
+}
+.text-input:focus { box-shadow: 0 0 0 1.5px var(--red-hi); }
+
+a.list-item { text-decoration: none; }
+.tpl-row { padding-right: 4px; }
+.tpl-link { flex: 1; display: flex; flex-direction: column; justify-content: center; min-height: 60px; color: inherit; text-decoration: none; }
+.li-title { color: var(--text); font-weight: 600; }
+.li-sub { font-size: 13px; color: var(--muted); }
+
+.tpl-ex { margin-bottom: 12px; }
+.tpl-fields { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin: 8px 0 4px; }
+.tpl-fields label { display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: var(--muted); text-align: center; }
+.tpl-fields input {
+  width: 100%;
+  height: 42px;
+  border: 0;
+  border-radius: 10px;
+  background: var(--surface-2);
+  color: var(--text);
+  font: inherit;
+  font-size: 18px;
+  text-align: center;
+  outline: none;
+  -webkit-appearance: none;
+  appearance: none;
+}
+.tpl-fields input:focus { box-shadow: 0 0 0 1.5px var(--red-hi); }
+
 /* Devam eden antrenman */
 .workout-head {
   display: flex;
@@ -187,7 +253,9 @@ main {
   min-width: 44px; min-height: 36px; margin-right: -10px;
   cursor: pointer;
 }
-.prev { margin: 2px 0 10px; font-size: 13px; color: var(--purple); }
+.target { margin: 2px 0 0; font-size: 13px; color: var(--muted); }
+.prev { margin: 2px 0 0; font-size: 13px; color: var(--purple); }
+.ex-head + .set-head, .target + .set-head, .prev + .set-head { margin-top: 10px; }
 
 .set-grid {
   display: grid;
@@ -195,7 +263,7 @@ main {
   gap: 8px;
   align-items: center;
 }
-.set-head { font-size: 12px; color: var(--muted); margin: 6px 0 6px; }
+.set-head { font-size: 12px; color: var(--muted); margin: 6px 0; }
 .set-head span:nth-child(2), .set-head span:nth-child(3) { text-align: center; }
 .set-row { margin-bottom: 8px; }
 .set-no { color: var(--muted); font-variant-numeric: tabular-nums; text-align: center; }
@@ -229,6 +297,11 @@ main {
 .set-row.done input { background: rgba(139, 15, 20, 0.22); }
 .set-row.done .check { background: var(--red); color: #fff; }
 .set-row.done .set-no { color: var(--red-hi); }
+/* Isınma seti: kırmızı yerine gri tonlarda, çalışma setlerinden ayrılsın */
+.set-row.warm .set-no { font-size: 13px; }
+.set-row.warm.done input { background: #222; color: var(--muted); }
+.set-row.warm.done .check { background: #3a3a3a; }
+.set-row.warm.done .set-no { color: var(--muted); }
 
 .add-set {
   width: 100%;
