@@ -31,6 +31,7 @@ export const antrenman = {
     el.addEventListener('click', onClick);
     el.addEventListener('input', onInput);
     el.addEventListener('focusin', onFocus);
+    document.addEventListener('visibilitychange', onHide);
     const timer = setInterval(tick, 1000);
 
     return () => {
@@ -38,6 +39,7 @@ export const antrenman = {
       el.removeEventListener('click', onClick);
       el.removeEventListener('input', onInput);
       el.removeEventListener('focusin', onFocus);
+      document.removeEventListener('visibilitychange', onHide);
       flushSave();
       state = null;
     };
@@ -94,6 +96,10 @@ function saveNow() {
 }
 function flushSave() {
   if (saveTimer) saveNow();
+}
+// Uygulama arka plana atılınca bekleyen kaydı hemen yap (iPhone arka planda zamanlayıcıları durdurur)
+function onHide() {
+  if (document.visibilityState === 'hidden') flushSave();
 }
 
 /* ---------- Ekranlar ---------- */

@@ -2,6 +2,7 @@
 // mount bir temizlik fonksiyonu döndürebilir; ekrandan çıkarken çağrılır.
 // tab: alt menüde hangi sekmenin yanacağı (alt sayfalar için).
 import { toast } from './ui.js';
+import { VERSION } from './version.js';
 import { antrenman } from './views/antrenman.js';
 import { sablonlar, sablon } from './views/sablonlar.js';
 import { gecmis, kayit } from './views/gecmis.js';
@@ -31,7 +32,7 @@ export const views = {
           <button class="list-item" data-action="export">Yedeği dışa aktar <span class="chev">›</span></button>
           <button class="list-item" data-action="import">Yedeği içe aktar <span class="chev">›</span></button>
         </div>
-        <p class="version">Owl · sürüm 0.5</p>`;
+        <p class="version">Owl · sürüm ${VERSION}</p>`;
       el.querySelectorAll('[data-action]').forEach(b => b.addEventListener('click', soon));
     },
   },

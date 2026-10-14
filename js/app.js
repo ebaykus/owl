@@ -2,6 +2,7 @@
 // Adresler: #/antrenman, #/ayarlar, #/sablon/<id> gibi.
 import { views } from './views.js';
 import { ensureSeedData } from './db.js';
+import { VERSION } from './version.js';
 
 const viewEl = document.getElementById('view');
 const titleEl = document.getElementById('page-title');
@@ -38,3 +39,20 @@ navigator.storage?.persist?.();
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('sw.js').catch(() => {});
 }
+
+// iPhone ana ekran uygulamasını arka planda günlerce açık tutabiliyor.
+// Uygulama öne her geldiğinde yeni sürüm var mı bak; varsa yenile.
+// (Devam eden antrenman her değişiklikte kaydedildiği için veri kaybolmaz.)
+document.addEventListener('visibilitychange', async () => {
+  if (document.visibilityState !== 'visible') return;
+  try {
+    const text = await fetch(`js/version.js?t=${Date.now()}`, { cache: 'no-store' }).then(r => r.text());
+    const latest = text.match(/VERSION = '([^']+)'/)?.[1];
+    if (latest && latest !== VERSION) {
+      await navigator.serviceWorker?.getRegistration().then(r => r?.update()).catch(() => {});
+      location.reload();
+    }
+  } catch {
+    // internet yoksa şimdilik eski sürümle devam
+  }
+});
