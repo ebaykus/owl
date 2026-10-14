@@ -4,6 +4,7 @@
 import { toast } from './ui.js';
 import { antrenman } from './views/antrenman.js';
 import { sablonlar, sablon } from './views/sablonlar.js';
+import { gecmis, kayit } from './views/gecmis.js';
 
 const soon = () => toast('Bir sonraki adımlarda geliyor');
 
@@ -11,18 +12,8 @@ export const views = {
   antrenman,
   sablonlar,
   sablon,
-
-  gecmis: {
-    title: 'Geçmiş',
-    mount(el) {
-      el.innerHTML = `
-        <div class="empty">
-          <svg viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="16" rx="2"/><path d="M16 3v4M8 3v4M4 11h16"/></svg>
-          <h2>Henüz antrenman yok</h2>
-          <p>Bitirdiğin antrenmanlar burada takvimde görünecek.</p>
-        </div>`;
-    },
-  },
+  gecmis,
+  kayit,
 
   ilerleme: {
     title: 'İlerleme',
@@ -50,7 +41,7 @@ export const views = {
           <button class="list-item" data-action="export">Yedeği dışa aktar <span class="chev">›</span></button>
           <button class="list-item" data-action="import">Yedeği içe aktar <span class="chev">›</span></button>
         </div>
-        <p class="version">Owl · sürüm 0.3</p>`;
+        <p class="version">Owl · sürüm 0.4</p>`;
       el.querySelectorAll('[data-action]').forEach(b => b.addEventListener('click', soon));
     },
   },

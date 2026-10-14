@@ -3,6 +3,7 @@
 import * as db from '../db.js';
 import { pickExercise } from '../picker.js';
 import { toast, actionSheet, esc, fmt, parseNum, uid, formatDuration } from '../ui.js';
+import { workSets, workoutVolume } from '../workout-utils.js';
 
 const CHECK_ICON = '<svg viewBox="0 0 24 24"><path d="M5 12l5 5L20 7"/></svg>';
 
@@ -78,7 +79,6 @@ function suggestion(entry, j) {
 }
 
 const newSet = (warmup = false) => (warmup ? { weight: null, reps: null, done: false, warmup: true } : { weight: null, reps: null, done: false });
-const workSets = sets => sets.filter(s => !s.warmup);
 
 /* ---------- Kaydetme ---------- */
 
@@ -305,11 +305,11 @@ async function finishWorkout() {
 
   entries.forEach(e => state.previous.set(e.exerciseId, e.sets));
   if (w.templateId) state.lastTemplateId = w.templateId;
-  const sets = entries.flatMap(e => workSets(e.sets));
-  const volume = sets.reduce((sum, s) => sum + s.weight * s.reps, 0);
+  const setCount = entries.flatMap(e => workSets(e.sets)).length;
+  const volume = workoutVolume({ entries });
   state.workout = null;
   render();
-  toast(`Kaydedildi · ${sets.length} set · ${fmt(volume)} kg hacim`);
+  toast(`Kaydedildi · ${setCount} set · ${fmt(volume)} kg hacim`);
 }
 
 async function discardWorkout() {
