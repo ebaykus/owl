@@ -17,6 +17,10 @@
 
 * { box-sizing: border-box; }
 
+/* iPhone'da ana ekrandan açınca sayfa, üstteki saat çubuğu kadar kısa hesaplanıyor
+   ve alt bar en alta oturmuyor. Sayfayı o kadar uzatarak düzeltiyoruz. */
+html { min-height: calc(100% + env(safe-area-inset-top)); }
+
 html, body {
   margin: 0;
   background: var(--bg);
